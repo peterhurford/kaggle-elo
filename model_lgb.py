@@ -63,11 +63,11 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-#drops = get_drops()
-#print('Current drops are {}'.format(', '.join(drops)))
-null_importances, _ = load_cache('null_importances')
-drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
-features = null_importances[null_importances['gain_score'] >= 0].sort_values('gain_score', ascending=False)['feature'].values 
+drops = get_drops()
+print('Current drops are {}'.format(', '.join(drops)))
+#null_importances, _ = load_cache('null_importances')
+#drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
+#features = null_importances[null_importances['gain_score'] >= 0].sort_values('gain_score', ascending=False)['feature'].values 
 features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)
@@ -75,7 +75,7 @@ print(test[features_c].shape)
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
 results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
-reuslts['importance']['abs_value'] = abs(results['importance']['importance'])
+results['importance']['abs_value'] = abs(results['importance']['importance'])
 print(results['importance'].groupby('feature')['feature', 'importance', 'abs_value'].mean().reset_index().sort_values('abs_value', ascending=False).drop('abs_value', axis=1)) 
 import pdb
 pdb.set_trace()
@@ -92,6 +92,7 @@ submission['card_id'] = test_id
 submission['target'] = results['test']
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
-# [2018-12-08 16:00:53.991948] lgb cv scores : [3.739971782381371, 3.5471127895717713, 3.682172181088817, 3.64911046434147, 3.6915502983805837]
-# [2018-12-08 16:00:53.992076] lgb mean cv score : 3.6619835031528027
-# [2018-12-08 16:00:53.992270] lgb std cv score : 0.06438159016478576
+# [2018-12-09 20:29:02.273225] lgb cv scores : [3.7396166928382795, 3.5461114303343018, 3.683194851955918, 3.6495444731195255, 3.691795666192351]
+# [2018-12-09 20:29:02.273366] lgb mean cv score : 3.6620526228880754
+# [2018-12-09 20:29:02.273567] lgb std cv score : 0.06472502045364062
+# [2018-12-09 20:29:02.296635] lgb final cv score : 3.662624387498667

@@ -28,8 +28,9 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-drops = get_drops()
-features_c = [f for f in features if f not in drops]
+#drops = get_drops()
+#features_c = [f for f in features if f not in drops]
+features_c = features
 print(train[features_c].shape)
 print(test[features_c].shape)
 
@@ -73,27 +74,53 @@ def runBayesOpt(num_leaves, max_depth, bag_fraction, feat_fraction, lambda1, lam
               'min_data_in_leaf': int(min_data),
               'early_stop': 40,
               'verbose_eval': 20,
-			  'verbosity': -1,
-			  'data_random_seed': 3,
+              'verbosity': -1,
+              'data_random_seed': 3,
               'num_rounds': 10000}
     results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
     val_score = results['final_cv']
     print('score {}: num_leaves {}, max_depth {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(val_score, int(num_leaves), int(max_depth), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
     return -val_score
 
+# LGB_BO = BayesianOptimization(runBayesOpt, {
+#     'num_leaves': (5, 130),
+#     'max_depth': (4, 10),
+#     'bag_fraction': (0.1, 1.0),
+#     'feat_fraction': (0.1, 1.0),
+#     'lambda1': (0, 10),
+#     'lambda2': (0, 10),
+#     'min_data': (10, 400)
+# })
 LGB_BO = BayesianOptimization(runBayesOpt, {
-    'num_leaves': (5, 130),
-    'max_depth': (4, 10),
+    'num_leaves': (8, 120),
+    'max_depth': (8, 12),
     'bag_fraction': (0.1, 1.0),
-    'feat_fraction': (0.1, 1.0),
-    'lambda1': (0, 10),
-    'lambda2': (0, 10),
-    'min_data': (10, 400)
+    'feat_fraction': (0.1, 0.9),
+    'lambda1': (0, 20),
+    'lambda2': (0, 20),
+    'min_data': (10, 1000)
 })
 
+# Bias optimizer toward spots we've found to be good in prior searches
+good_spots = [{'bag_fraction': 0.7985187090163345,
+               'feat_fraction': 0.6802921589688393,
+               'lambda1': 9.794769957656374,
+               'lambda2': 9.658390560640429,
+               'max_depth': 9.852726586202104,
+               'min_data': 390.9105383978114,
+               'num_leaves': 79.45735287175796},
+			  {'bag_fraction': 0.7315603431126321,
+               'feat_fraction': 0.7567557411515091,
+               'lambda1': 16.667471886996317,
+               'lambda2': 5.119824106597648,
+               'max_depth': 8.435464840874136,
+               'min_data': 300.06177710894866,
+               'num_leaves': 119.1579612709641}]
+for good_spot in good_spots:
+	LGB_BO.probe(params=good_spot, lazy=True)
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore')
-    LGB_BO.maximize(init_points=2, n_iter=20, acq='ei', xi=0.0)
+    LGB_BO.maximize(init_points=10, n_iter=100, acq='ei', xi=0.0)
 
 pprint(LGB_BO.max)
 import pdb
@@ -107,3 +134,11 @@ pdb.set_trace()
 #             'num_leaves': 79.45735287175796},
 #  'target': -3.6652805303686717}
 
+# {'params': {'bag_fraction': 0.7315603431126321,
+#             'feat_fraction': 0.7567557411515091,
+#             'lambda1': 16.667471886996317,
+#             'lambda2': 5.119824106597648,
+#             'max_depth': 8.435464840874136,
+#             'min_data': 300.06177710894866,
+#             'num_leaves': 119.1579612709641},
+#  'target': -3.6638516743703247}

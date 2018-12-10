@@ -59,13 +59,13 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     return pred_test_y, pred_test_y2, model.feature_importance()
 
 
-def runBayesOpt(num_leaves, max_depth, bag_fraction, feat_fraction, lambda1, lambda2, min_data):
-    print('num_leaves {}, max_depth {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(int(num_leaves), int(max_depth), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
+def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_data):
+    print('num_leaves {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(int(num_leaves), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
     params = {'application': 'regression',
               'boosting': 'gbdt',
               'metric': 'rmse',
               'num_leaves': int(num_leaves),
-              'max_depth': int(max_depth),
+              'max_depth': 8,
               'learning_rate': 0.05,
               'bagging_fraction': bag_fraction,
               'feature_fraction': feat_fraction,
@@ -79,7 +79,7 @@ def runBayesOpt(num_leaves, max_depth, bag_fraction, feat_fraction, lambda1, lam
               'num_rounds': 10000}
     results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
     val_score = results['final_cv']
-    print('score {}: num_leaves {}, max_depth {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(val_score, int(num_leaves), int(max_depth), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
+    print('score {}: num_leaves {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(val_score, int(num_leaves), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
     return -val_score
 
 # LGB_BO = BayesianOptimization(runBayesOpt, {
@@ -91,14 +91,22 @@ def runBayesOpt(num_leaves, max_depth, bag_fraction, feat_fraction, lambda1, lam
 #     'lambda2': (0, 10),
 #     'min_data': (10, 400)
 # })
+# LGB_BO = BayesianOptimization(runBayesOpt, {
+#     'num_leaves': (8, 120),
+#     'max_depth': (8, 12),
+#     'bag_fraction': (0.1, 1.0),
+#     'feat_fraction': (0.1, 0.9),
+#     'lambda1': (0, 20),
+#     'lambda2': (0, 20),
+#     'min_data': (10, 1000)
+# })
 LGB_BO = BayesianOptimization(runBayesOpt, {
-    'num_leaves': (8, 120),
-    'max_depth': (8, 12),
+    'num_leaves': (80, 120),
     'bag_fraction': (0.1, 1.0),
-    'feat_fraction': (0.1, 0.9),
-    'lambda1': (0, 20),
-    'lambda2': (0, 20),
-    'min_data': (10, 1000)
+    'feat_fraction': (0.7, 0.8),
+    'lambda1': (1, 30),
+    'lambda2': (1, 30),
+    'min_data': (200, 1000)
 })
 
 # Bias optimizer toward spots we've found to be good in prior searches
@@ -106,23 +114,30 @@ good_spots = [{'bag_fraction': 0.7985187090163345,
                'feat_fraction': 0.6802921589688393,
                'lambda1': 9.794769957656374,
                'lambda2': 9.658390560640429,
-               'max_depth': 9.852726586202104,
+               # 'max_depth': 9.852726586202104,
                'min_data': 390.9105383978114,
                'num_leaves': 79.45735287175796},
-			  {'bag_fraction': 0.7315603431126321,
+              {'bag_fraction': 0.7315603431126321,
                'feat_fraction': 0.7567557411515091,
                'lambda1': 16.667471886996317,
                'lambda2': 5.119824106597648,
-               'max_depth': 8.435464840874136,
+               # 'max_depth': 8.435464840874136,
                'min_data': 300.06177710894866,
-               'num_leaves': 119.1579612709641}]
+               'num_leaves': 119.1579612709641},
+              {'bag_fraction': 0.1422071191481194,
+               'feat_fraction': 0.755712919202501,
+               'lambda1': 19.096518651294396,
+               'lambda2': 18.784092923070023,
+               # 'max_depth': 8.075727566871183,
+               'min_data': 350.3497092361605,
+               'num_leaves': 86.57018015209862}]
 for good_spot in good_spots:
-	LGB_BO.probe(params=good_spot, lazy=True)
+    LGB_BO.probe(params=good_spot, lazy=True)
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore')
-    LGB_BO.maximize(init_points=10, n_iter=100, acq='ei', xi=0.0)
+    LGB_BO.maximize(init_points=10, n_iter=40, acq='ei', xi=0.0)
 
-pprint(LGB_BO.max)
+pprint(sorted([(r['target'], r['params']) for r in LGB_BO.res], reverse=True)[:3])
 import pdb
 pdb.set_trace()
 # {'params': {'bag_fraction': 0.7985187090163345,
@@ -142,3 +157,12 @@ pdb.set_trace()
 #             'min_data': 300.06177710894866,
 #             'num_leaves': 119.1579612709641},
 #  'target': -3.6638516743703247}
+
+# {'params': {'bag_fraction': 0.1422071191481194,
+#             'feat_fraction': 0.755712919202501,
+#             'lambda1': 19.096518651294396,
+#             'lambda2': 18.784092923070023,
+#             'max_depth': 8.075727566871183,
+#             'min_data': 350.3497092361605,
+#             'num_leaves': 86.57018015209862},
+#  'target': -3.6631947223983854}

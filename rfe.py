@@ -13,19 +13,19 @@ from cache import load_cache, save_in_cache
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 50,
-          'max_depth': 10,
+          'num_leaves': 20,
+          'max_depth': 8,
           'learning_rate': 0.05,
-          'bagging_fraction': 0.9,
-          'feature_fraction': 0.9,
-          'lambda_l1': 0.1,
-          'lambda_l2': 0,
-          'min_data_in_leaf': 30,
+          'bagging_fraction': 0.834,
+          'feature_fraction': 0.72,
+          'lambda_l1': 58.57,
+          'lambda_l2': 59.763,
+          'min_data_in_leaf': 50,
           'verbosity': -1,
           'data_random_seed': 3,
           'nthread': 4,
-          'early_stop': 40,
-          'verbose_eval': 20,
+          'early_stop': 200,
+          'verbose_eval': 100,
           'num_rounds': 10000}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
@@ -68,7 +68,6 @@ print(test[features].shape)
 #drops = get_drops()
 null_importances, _ = load_cache('null_importances')
 drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
-features = null_importances[null_importances['gain_score'] >= 0].sort_values('gain_score', ascending=False)['feature'].values 
 features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)
@@ -93,7 +92,7 @@ for run in range(total_runs):
         print('Current drops are {}'.format(', '.join(drops)))
         print('Features remaining are {}'.format(', '.join(features_c)))
         print('Best score so far is {}'.format(best_score))
-    elif (run + 1) % 4 == 0:
+    elif (run + 1) % 3 == 0:
         print('-----')
         add = drops.pop(0)
         features_c.append(add)
@@ -121,7 +120,7 @@ for run in range(total_runs):
             drops.append(drop)
         best_score = val_score
     else:
-        if (run + 1) % 4 == 0:
+        if (run + 1) % 3 == 0:
             drops.append(add)
             features_c = [f for f in features_c if f != add]
         else:

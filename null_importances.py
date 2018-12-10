@@ -41,14 +41,14 @@ def get_feature_importances(data, shuffle, seed=None):
     lgb_params = {'application': 'regression',
                   'boosting': 'gbdt',
                   'metric': 'rmse',
-                  'num_leaves': 50,
-                  'max_depth': 10,
-                  'learning_rate': 0.005,
-                  'bagging_fraction': 0.9,
-                  'feature_fraction': 0.9,
-                  'lambda_l1': 0.1,
-                  'lambda_l2': 0,
-                  'min_data_in_leaf': 30,
+                  'num_leaves': 86,
+                  'max_depth': 8,
+                  'learning_rate': 0.05,
+                  'bagging_fraction': 0.14,
+                  'feature_fraction': 0.76,
+                  'lambda_l1': 19.1,
+                  'lambda_l2': 18.784,
+                  'min_data_in_leaf': 350,
                   'verbosity': -1,
                   'data_random_seed': 3,
                   'nthread': 4}
@@ -74,7 +74,7 @@ np.random.seed(123)
 actual_imp_df = get_feature_importances(data=train, shuffle=False)
 
 null_imp_df = pd.DataFrame()
-nb_runs = 100
+nb_runs = 50
 import time
 start = time.time()
 dsp = ''

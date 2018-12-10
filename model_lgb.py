@@ -11,14 +11,14 @@ from cache import load_cache, save_in_cache
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 79,
-          'max_depth': 9,
-          'learning_rate': 0.005,
-          'bagging_fraction': 0.8,
-          'feature_fraction': 0.68,
-          'lambda_l1': 9.794,
-          'lambda_l2': 9.658,
-          'min_data_in_leaf': 391,
+          'num_leaves': 20,
+          'max_depth': 8,
+          'learning_rate': 0.05,
+          'bagging_fraction': 0.834,
+          'feature_fraction': 0.72,
+          'lambda_l1': 58.57,
+          'lambda_l2': 59.763,
+          'min_data_in_leaf': 50,
           'verbosity': -1,
           'data_random_seed': 3,
           'nthread': 4,
@@ -63,12 +63,13 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-drops = get_drops()
+#drops = get_drops()
+#print('Current drops are {}'.format(', '.join(drops)))
+null_importances, _ = load_cache('null_importances')
+drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
 print('Current drops are {}'.format(', '.join(drops)))
-#null_importances, _ = load_cache('null_importances')
-#drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
-#features = null_importances[null_importances['gain_score'] >= 0].sort_values('gain_score', ascending=False)['feature'].values 
 features_c = [f for f in features if f not in drops]
+#features_c = features
 print(train[features_c].shape)
 print(test[features_c].shape)
 
@@ -92,7 +93,7 @@ submission['card_id'] = test_id
 submission['target'] = results['test']
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
-# [2018-12-09 20:29:02.273225] lgb cv scores : [3.7396166928382795, 3.5461114303343018, 3.683194851955918, 3.6495444731195255, 3.691795666192351]
-# [2018-12-09 20:29:02.273366] lgb mean cv score : 3.6620526228880754
-# [2018-12-09 20:29:02.273567] lgb std cv score : 0.06472502045364062
-# [2018-12-09 20:29:02.296635] lgb final cv score : 3.662624387498667
+# [2018-12-10 19:32:39.004758] lgb cv scores : [3.742736750757984, 3.542954538411641, 3.6757707156775616, 3.645548892999196, 3.6886165985701935]
+# [2018-12-10 19:32:39.004820] lgb mean cv score : 3.659125499283315
+# [2018-12-10 19:32:39.004898] lgb std cv score : 0.06605701465728249
+# [2018-12-10 19:32:39.016486] lgb final cv score : 3.659721550451685

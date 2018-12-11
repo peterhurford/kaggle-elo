@@ -82,10 +82,7 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-#drops = get_drops()
-null_importances, _ = load_cache('null_importances')
-drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score', ascending=False)['feature'])
-features = list(null_importances[null_importances['gain_score'] > 0].sort_values('gain_score')['feature'])
+drops = get_drops()
 features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)

@@ -28,13 +28,8 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-#drops = get_drops()
-#features_c = [f for f in features if f not in drops]
-null_importances, _ = load_cache('null_importances')
-drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
-print('Current drops are {}'.format(', '.join(drops)))
+drops = get_drops()
 features_c = [f for f in features if f not in drops]
-#features_c = features
 print(train[features_c].shape)
 print(test[features_c].shape)
 
@@ -74,7 +69,7 @@ def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_d
               'metric': 'rmse',
               'num_leaves': int(num_leaves),
               'max_depth': 8,
-              'learning_rate': 0.05, # 0.01
+              'learning_rate': 0.05,
               'bagging_fraction': bag_fraction,
               'feature_fraction': feat_fraction,
               'lambda_l1': lambda1,
@@ -106,21 +101,18 @@ good_spots = [{'bag_fraction': 0.7985187090163345,
                'feat_fraction': 0.6802921589688393,
                'lambda1': 9.794769957656374,
                'lambda2': 9.658390560640429,
-               # 'max_depth': 9.852726586202104,
                'min_data': 390.9105383978114,
                'num_leaves': 79.45735287175796},
               {'bag_fraction': 0.7315603431126321,
                'feat_fraction': 0.7567557411515091,
                'lambda1': 16.667471886996317,
                'lambda2': 5.119824106597648,
-               # 'max_depth': 8.435464840874136,
                'min_data': 300.06177710894866,
                'num_leaves': 119.1579612709641},
               {'bag_fraction': 0.1422071191481194,
                'feat_fraction': 0.755712919202501,
                'lambda1': 19.096518651294396,
                'lambda2': 18.784092923070023,
-               # 'max_depth': 8.075727566871183,
                'min_data': 350.3497092361605,
                'num_leaves': 86.57018015209862},
               {'bag_fraction': 0.879623047331525,
@@ -152,7 +144,13 @@ good_spots = [{'bag_fraction': 0.7985187090163345,
                'lambda1': 79.34759221074741,
                'lambda2': 79.39185979155437,
                'min_data': 57.90790380291228,
-               'num_leaves': 55.07234817099164}]
+               'num_leaves': 55.07234817099164},
+              {'bag_fraction': 0.9472662838641918,
+               'feat_fraction': 0.797911656390694,
+               'lambda1': 101.31794802211229,
+               'lambda2': 119.98482321028108,
+               'min_data': 21.04059817721408,
+               'num_leaves': 105.37921551890115}]
 for good_spot in good_spots:
     LGB_BO.probe(params=good_spot, lazy=True)
 with warnings.catch_warnings():
@@ -191,3 +189,25 @@ LGB_BO.maximize(init_points=0, n_iter=5)
 #    'lambda2': 77.26643262531668,
 #    'min_data': 14.299956050007943,
 #    'num_leaves': 96.81349163955748})]
+
+# [(-3.6461933992927404,
+#   {'bag_fraction': 0.9472662838641918,
+#    'feat_fraction': 0.797911656390694,
+#    'lambda1': 101.31794802211229,
+#    'lambda2': 119.98482321028108,
+#    'min_data': 21.04059817721408,
+#    'num_leaves': 105.37921551890115}),
+#  (-3.647056717771391,
+#   {'bag_fraction': 0.8903087772807334,
+#    'feat_fraction': 0.5793895699132726,
+#    'lambda1': 98.64084361336525,
+#    'lambda2': 99.9514933542123,
+#    'min_data': 12.43728272402597,
+#    'num_leaves': 63.68355511834804}),
+#  (-3.647065835680133,
+#   {'bag_fraction': 0.8342306889959391,
+#    'feat_fraction': 0.7196939382136842,
+#    'lambda1': 58.56969078854843,
+#    'lambda2': 59.7628238456237,
+#    'min_data': 49.87730950308235,
+#    'num_leaves': 20.19216555870919})]

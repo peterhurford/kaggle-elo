@@ -23,9 +23,8 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-#drops = get_drops()
-#print('Current drops are {}'.format(', '.join(drops)))
-#features = [f for f in features if f not in drops]
+drops = get_drops()
+features = [f for f in features if f not in drops]
 print(train[features].shape)
 print(test[features].shape)
 
@@ -41,14 +40,14 @@ def get_feature_importances(data, shuffle, seed=None):
     lgb_params = {'application': 'regression',
                   'boosting': 'gbdt',
                   'metric': 'rmse',
-                  'num_leaves': 55,
+                  'num_leaves': 105,
                   'max_depth': 8,
                   'learning_rate': 0.05,
-                  'bagging_fraction': 0.94,
-                  'feature_fraction': 0.625,
-                  'lambda_l1': 79.34,
-                  'lambda_l2': 79.39,
-                  'min_data_in_leaf': 58,
+                  'bagging_fraction': 0.95,
+                  'feature_fraction': 0.8,
+                  'lambda_l1': 101.32,
+                  'lambda_l2': 120,
+                  'min_data_in_leaf': 21,
                   'verbosity': -1,
                   'data_random_seed': 3,
                   'nthread': 4}

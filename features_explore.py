@@ -16,7 +16,6 @@ test_id = test['card_id']
 
 features = [c for c in train.columns if c not in ['card_id', 'first_active_month', 'target']]
 #drops = get_drops()
-#print('Current drops are {}'.format(', '.join(drops)))
 #features = [f for f in features if f not in drops]
 print(train[features].shape)
 print(test[features].shape)

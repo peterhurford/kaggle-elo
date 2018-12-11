@@ -11,14 +11,14 @@ from cache import load_cache, save_in_cache
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 55,
+          'num_leaves': 105,
           'max_depth': 8,
-          'learning_rate': 0.01,
-          'bagging_fraction': 0.94,
-          'feature_fraction': 0.625,
-          'lambda_l1': 79.34,
-          'lambda_l2': 79.39,
-          'min_data_in_leaf': 58,
+          'learning_rate': 0.05,
+          'bagging_fraction': 0.95,
+          'feature_fraction': 0.8,
+          'lambda_l1': 101.3,
+          'lambda_l2': 120,
+          'min_data_in_leaf': 21,
           'verbosity': -1,
           'data_random_seed': 3,
           'nthread': 4,
@@ -63,13 +63,8 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-#drops = get_drops()
-#print('Current drops are {}'.format(', '.join(drops)))
-null_importances, _ = load_cache('null_importances')
-drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
-print('Current drops are {}'.format(', '.join(drops)))
+drops = get_drops()
 features_c = [f for f in features if f not in drops]
-#features_c = features
 print(train[features_c].shape)
 print(test[features_c].shape)
 
@@ -93,7 +88,9 @@ submission['card_id'] = test_id
 submission['target'] = results['test']
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
-# [2018-12-11 03:14:22.644050] lgb cv scores : [3.719292275506185, 3.535749965098354, 3.665243866122149, 3.6301183361382807, 3.676172103979167]
-# [2018-12-11 03:14:22.644102] lgb mean cv score : 3.645315309368827
-# [2018-12-11 03:14:22.644163] lgb std cv score : 0.06173717409674665
-# [2018-12-11 03:14:22.653486] lgb final cv score : 3.645837893707764
+# [2018-12-11 19:04:18.229080] lgb cv scores : [3.71897167891055, 3.5389659369329043, 3.6671237345675483, 3.626184247180187, 3.6745535506677336]
+# [2018-12-11 19:04:18.229142] lgb mean cv score : 3.645159829651785
+# [2018-12-11 19:04:18.229216] lgb std cv score : 0.06071541587807217
+# [2018-12-11 21:24:36.896120] lgb final cv score : 3.6463998946932987
+
+# kaggle competitions submit -c elo-merchant-category-recommendation -f submit/submit_lgb.csv -m "CV 3.66241"

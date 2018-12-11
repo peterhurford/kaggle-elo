@@ -10,17 +10,34 @@ from utils import print_step, rmse
 from drops import get_drops
 from cache import load_cache, save_in_cache
 
+# params = {'application': 'regression',
+#           'boosting': 'gbdt',
+#           'metric': 'rmse',
+#           'num_leaves': 20,
+#           'max_depth': 8,
+#           'learning_rate': 0.05,
+#           'bagging_fraction': 0.834,
+#           'feature_fraction': 0.72,
+#           'lambda_l1': 58.57,
+#           'lambda_l2': 59.763,
+#           'min_data_in_leaf': 50,
+#           'verbosity': -1,
+#           'data_random_seed': 3,
+#           'nthread': 4,
+#           'early_stop': 200,
+#           'verbose_eval': 100,
+#           'num_rounds': 10000}
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 20,
+          'num_leaves': 96,
           'max_depth': 8,
           'learning_rate': 0.05,
-          'bagging_fraction': 0.834,
-          'feature_fraction': 0.72,
-          'lambda_l1': 58.57,
-          'lambda_l2': 59.763,
-          'min_data_in_leaf': 50,
+          'bagging_fraction': 0.4,
+          'feature_fraction': 0.44,
+          'lambda_l1': 79.23,
+          'lambda_l2': 79.1,
+          'min_data_in_leaf': 496,
           'verbosity': -1,
           'data_random_seed': 3,
           'nthread': 4,
@@ -67,15 +84,20 @@ print(test[features].shape)
 
 #drops = get_drops()
 null_importances, _ = load_cache('null_importances')
-drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score')['feature'])
+drops = list(null_importances[null_importances['gain_score'] <= 0].sort_values('gain_score', ascending=False)['feature'])
+features = list(null_importances[null_importances['gain_score'] > 0].sort_values('gain_score')['feature'])
 features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)
 
+oof, submit = load_cache('lgb')
+prior_oof = oof['lgb']
+
 print('~~~~~~~~~~~~')
 print_step('Run Baseline LGB')
 results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb-baseline')
-best_score = results['final_cv']
+# best_score = results['final_cv']
+best_score = rmse(target, results['train'] * 0.5 + prior_oof * 0.5)
 total_runs = 60
 
 for run in range(total_runs):    
@@ -107,7 +129,8 @@ for run in range(total_runs):
         print('Current drops are {}'.format(', '.join(drops)))
         
     results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb-run-{}'.format(run))
-    val_score = results['final_cv']
+    # val_score = results['final_cv']
+    val_score = rmse(target, results['train'] * 0.5 + prior_oof * 0.5)
 
     if (run + 1) % 30 == 0 and (run + 1) < (total_runs - 20):
         print('...perturbation - reset best score to {}'.format(val_score))
@@ -130,26 +153,8 @@ for run in range(total_runs):
 print(train[features_c].shape)
 print(test[features_c].shape)
 
-params = {'application': 'regression',
-          'boosting': 'gbdt',
-          'metric': 'rmse',
-          'num_leaves': 50,
-          'max_depth': 10,
-          'learning_rate': 0.005,
-          'bagging_fraction': 0.9,
-          'feature_fraction': 0.9,
-          'lambda_l1': 0.1,
-          'lambda_l2': 0,
-          'min_data_in_leaf': 30,
-          'verbosity': -1,
-          'data_random_seed': 3,
-          'nthread': 4,
-          'early_stop': 200,
-          'verbose_eval': 100,
-          'num_rounds': 10000}
 print('~~~~~~~~~~~~~~~~~~')
 print_step('Run Final LGB')
 results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb-final')
-print(results['importance'].groupby('feature')['feature', 'importance', 'abs_value'].mean().reset_index().sort_values('abs_value', ascending=False).drop('abs_value', axis=1)) 
 import pdb
 pdb.set_trace()

@@ -8,23 +8,6 @@ from utils import print_step, rmse
 from drops import get_drops
 from cache import load_cache, save_in_cache
 
-# params = {'application': 'regression',
-#           'boosting': 'gbdt',
-#           'metric': 'rmse',
-#           'num_leaves': 20,
-#           'max_depth': 8,
-#           'learning_rate': 0.05,
-#           'bagging_fraction': 0.834,
-#           'feature_fraction': 0.72,
-#           'lambda_l1': 58.57,
-#           'lambda_l2': 59.763,
-#           'min_data_in_leaf': 50,
-#           'verbosity': -1,
-#           'data_random_seed': 3,
-#           'nthread': 4,
-#           'early_stop': 200,
-#           'verbose_eval': 100,
-#           'num_rounds': 10000}
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
@@ -110,7 +93,7 @@ submission['card_id'] = test_id
 submission['target'] = results['test']
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
-# [2018-12-11 00:01:25.414903] lgb cv scores : [3.7400245954389986, 3.544294703385064, 3.675783734014573, 3.643566661964878, 3.6856146124231746]
-# [2018-12-11 00:01:25.414972] lgb mean cv score : 3.6578568614453375
-# [2018-12-11 00:01:25.415057] lgb std cv score : 0.06472090165257618
-# [2018-12-11 00:01:25.427475] lgb final cv score : 3.658429243854454
+# [2018-12-11 03:14:22.644050] lgb cv scores : [3.719292275506185, 3.535749965098354, 3.665243866122149, 3.6301183361382807, 3.676172103979167]
+# [2018-12-11 03:14:22.644102] lgb mean cv score : 3.645315309368827
+# [2018-12-11 03:14:22.644163] lgb std cv score : 0.06173717409674665
+# [2018-12-11 03:14:22.653486] lgb final cv score : 3.645837893707764

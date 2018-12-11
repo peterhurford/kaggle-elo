@@ -39,6 +39,10 @@ print(train[features_c].shape)
 print(test[features_c].shape)
 
 
+# oof, submit = load_cache('lgb')
+# prior_oof = oof['lgb']
+
+
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     print_step('Prep LGB')
     d_train = lgb.Dataset(train_X, label=train_y)
@@ -70,7 +74,7 @@ def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_d
               'metric': 'rmse',
               'num_leaves': int(num_leaves),
               'max_depth': 8,
-              'learning_rate': 0.05,
+              'learning_rate': 0.01, # 0.05
               'bagging_fraction': bag_fraction,
               'feature_fraction': feat_fraction,
               'lambda_l1': lambda1,
@@ -84,6 +88,7 @@ def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_d
               'num_rounds': 10000}
     results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
     val_score = results['final_cv']
+    # val_score = rmse(target, results['train'] * 0.5 + prior_oof * 0.5)
     print('score {}: num_leaves {}, bag_fraction {}, feat_fraction {}, lambda1 {}, lambda2 {}, min_data {}'.format(val_score, int(num_leaves), bag_fraction, feat_fraction, lambda1, lambda2, int(min_data)))
     return -val_score
 
@@ -147,8 +152,13 @@ good_spots = [{'bag_fraction': 0.7985187090163345,
                'lambda1': 58.56969078854843,
                'lambda2': 59.7628238456237,
                'min_data': 49.87730950308235,
-               'num_leaves': 20.19216555870919}]
-]
+               'num_leaves': 20.19216555870919},
+              {'bag_fraction': 0.9407993140011,
+               'feat_fraction': 0.6252540671424148,
+               'lambda1': 79.34759221074741,
+               'lambda2': 79.39185979155437,
+               'min_data': 57.90790380291228,
+               'num_leaves': 55.07234817099164}]
 for good_spot in good_spots:
     LGB_BO.probe(params=good_spot, lazy=True)
 with warnings.catch_warnings():
@@ -251,3 +261,25 @@ LGB_BO.maximize(init_points=0, n_iter=5)
 #    'lambda2': 59.18637082389478,
 #    'min_data': 16.365219780435822,
 #    'num_leaves': 20.861916652918154})]
+
+# [(-3.65864027765721,
+#   {'bag_fraction': 0.9407993140011,
+#    'feat_fraction': 0.6252540671424148,
+#    'lambda1': 79.34759221074741,
+#    'lambda2': 79.39185979155437,
+#    'min_data': 57.90790380291228,
+#    'num_leaves': 55.07234817099164}),
+#  (-3.6594862587162256,
+#   {'bag_fraction': 0.12361787013895074,
+#    'feat_fraction': 0.5442129031350854,
+#    'lambda1': 79.41320550110204,
+#    'lambda2': 79.72938727340696,
+#    'min_data': 10.545932099602673,
+#    'num_leaves': 67.51930638913203}),
+#  (-3.659991826109802,
+#   {'bag_fraction': 0.9691093800877608,
+#    'feat_fraction': 0.6384313407100172,
+#    'lambda1': 79.99471120587329,
+#    'lambda2': 79.29277694700359,
+#    'min_data': 73.78304344051787,
+#    'num_leaves': 66.19264055369987})]

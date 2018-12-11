@@ -11,16 +11,19 @@ from cache import load_cache, save_in_cache
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 50,
-          'max_depth': 10,
+          'num_leaves': 105,
+          'max_depth': 8,
           'learning_rate': 0.05,
-          'bagging_fraction': 0.9,
-          'feature_fraction': 0.9,
-          'lambda_l1': 0.1,
-          'lambda_l2': 0,
-          'min_data_in_leaf': 30,
-          'early_stop': 40,
-          'verbose_eval': 2,
+          'bagging_fraction': 0.95,
+          'feature_fraction': 0.8,
+          'lambda_l1': 101.3,
+          'lambda_l2': 120,
+          'min_data_in_leaf': 21,
+          'verbosity': -1,
+          'data_random_seed': 3,
+          'nthread': 4,
+          'early_stop': 200,
+          'verbose_eval': 100,
           'num_rounds': 10000}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
@@ -66,7 +69,7 @@ print(train[features_c].shape)
 print(test[features_c].shape)
 
 print('~~~~~~~~~~~~')
-leaf_range = [8, 16, 31, 41, 51, 61, 81, 100, 120, 140, 200]
+leaf_range = [8, 16, 31, 41, 51, 61, 71, 81, 91, 100, 105, 110, 120, 140, 200]
 all_results = []
 for leaves in leaf_range:
     print('-')
@@ -77,3 +80,12 @@ for leaves in leaf_range:
     all_results.append(results)
 import pdb
 pdb.set_trace()
+
+rmse(target, np.mean([r['train'] for r in all_results], axis=0))
+pd.DataFrame(np.corrcoef([r['train'] for r in all_results]), index = leaf_range, columns = leaf_range)
+
+submission = pd.DataFrame()
+submission['card_id'] = test_id
+submission['target'] = np.mean([r['test'] for r in all_results], axis=0)
+submission.to_csv('submit/submit_leaf_blend.csv', index=False)
+# CV 3.643795

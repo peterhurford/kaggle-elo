@@ -11,7 +11,7 @@ from bayes_opt import BayesianOptimization
 
 from cv import run_cv_model
 from utils import print_step, rmse
-from drops import get_drops
+from drops import get_drops, save_drops, add_drops
 from cache import load_cache, save_in_cache
 
 
@@ -68,14 +68,14 @@ def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_d
               'boosting': 'gbdt',
               'metric': 'rmse',
               'num_leaves': int(num_leaves),
-              'max_depth': 8,
+              'max_depth': 11,
               'learning_rate': 0.05,
               'bagging_fraction': bag_fraction,
               'feature_fraction': feat_fraction,
               'lambda_l1': lambda1,
               'lambda_l2': lambda2,
               'min_data_in_leaf': int(min_data),
-              'early_stop': 40,
+              'early_stop': 80,
               'verbose_eval': 20,
               'verbosity': -1,
               'data_random_seed': 3,
@@ -88,12 +88,12 @@ def runBayesOpt(num_leaves, bag_fraction, feat_fraction, lambda1, lambda2, min_d
     return -val_score
 
 LGB_BO = BayesianOptimization(runBayesOpt, {
-    'num_leaves': (10, 100),
+    'num_leaves': (10, 1200),
     'bag_fraction': (0.1, 1.0),
-    'feat_fraction': (0.1, 0.8),
-    'lambda1': (1, 80),
-    'lambda2': (1, 80),
-    'min_data': (10, 500)
+    'feat_fraction': (0.1, 0.9),
+    'lambda1': (1, 400),
+    'lambda2': (1, 400),
+    'min_data': (10, 300)
 })
 
 # Bias optimizer toward spots we've found to be good in prior searches
@@ -150,64 +150,32 @@ good_spots = [{'bag_fraction': 0.7985187090163345,
                'lambda1': 101.31794802211229,
                'lambda2': 119.98482321028108,
                'min_data': 21.04059817721408,
-               'num_leaves': 105.37921551890115}]
+               'num_leaves': 105.37921551890115},
+			  {'bag_fraction': 0.54,
+			   'feat_fraction': 0.73,
+			   'lambda1': 197,
+			   'lambda2': 3,
+			   'min_data': 16,
+			   'num_leaves': 26},
+			  {'bag_fraction': 0.9,
+			   'feat_fraction': 0.77,
+			   'lambda1': 183,
+			   'lambda2': 155,
+			   'min_data': 23,
+			   'num_leaves': 499}]
 for good_spot in good_spots:
     LGB_BO.probe(params=good_spot, lazy=True)
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore')
-    LGB_BO.maximize(init_points=5, n_iter=30, acq='ei', xi=0.0)
+    LGB_BO.maximize(init_points=8, n_iter=60, acq='ei', xi=0.0)
 
 pprint(sorted([(r['target'], r['params']) for r in LGB_BO.res], reverse=True)[:3])
 import pdb
 pdb.set_trace()
 
 # Fine tune
-LGB_BO.set_bounds(new_bounds={'num_leaves': (20, 80),
-                              'lambda1': (30, 60),
-                              'lambda2': (30, 60),
-                              'min_data': (10, 100)})
+LGB_BO.set_bounds(new_bounds={'num_leaves': (20, 700),
+                              'lambda1': (30, 300),
+                              'lambda2': (30, 300),
+                              'min_data': (10, 300)})
 LGB_BO.maximize(init_points=0, n_iter=5)
-
-# [(-3.6482536420938994,
-#   {'bag_fraction': 0.9407993140011,
-#    'feat_fraction': 0.6252540671424148,
-#    'lambda1': 79.34759221074741,
-#    'lambda2': 79.39185979155437,
-#    'min_data': 57.90790380291228,
-#    'num_leaves': 55.07234817099164}),
-#  (-3.6483706713324766,
-#   {'bag_fraction': 0.25271816610509235,
-#    'feat_fraction': 0.7994077986887974,
-#    'lambda1': 79.61227287379948,
-#    'lambda2': 26.232614723945808,
-#    'min_data': 414.7708119848515,
-#    'num_leaves': 82.18356210105297}),
-#  (-3.648516601316671,
-#   {'bag_fraction': 0.36077902766929193,
-#    'feat_fraction': 0.30469501936141263,
-#    'lambda1': 79.27950721667382,
-#    'lambda2': 77.26643262531668,
-#    'min_data': 14.299956050007943,
-#    'num_leaves': 96.81349163955748})]
-
-# [(-3.6461933992927404,
-#   {'bag_fraction': 0.9472662838641918,
-#    'feat_fraction': 0.797911656390694,
-#    'lambda1': 101.31794802211229,
-#    'lambda2': 119.98482321028108,
-#    'min_data': 21.04059817721408,
-#    'num_leaves': 105.37921551890115}),
-#  (-3.647056717771391,
-#   {'bag_fraction': 0.8903087772807334,
-#    'feat_fraction': 0.5793895699132726,
-#    'lambda1': 98.64084361336525,
-#    'lambda2': 99.9514933542123,
-#    'min_data': 12.43728272402597,
-#    'num_leaves': 63.68355511834804}),
-#  (-3.647065835680133,
-#   {'bag_fraction': 0.8342306889959391,
-#    'feat_fraction': 0.7196939382136842,
-#    'lambda1': 58.56969078854843,
-#    'lambda2': 59.7628238456237,
-#    'min_data': 49.87730950308235,
-#    'num_leaves': 20.19216555870919})]

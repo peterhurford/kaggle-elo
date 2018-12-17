@@ -1,11 +1,15 @@
+import random
+
 import pandas as pd
 import numpy as np
 
 import lightgbm as lgb
 
+from pprint import pprint
+
 from cv import run_cv_model
 from utils import print_step, rmse
-from drops import get_drops
+from drops import get_drops, save_drops, add_drops
 from cache import load_cache, save_in_cache
 
 params = {'application': 'regression',
@@ -64,28 +68,38 @@ print(train[features].shape)
 print(test[features].shape)
 
 drops = get_drops()
-features_c = [f for f in features if f not in drops]
-print(train[features_c].shape)
-print(test[features_c].shape)
+features = [f for f in features if f not in drops]
+print(train[features].shape)
+print(test[features].shape)
 
 print('~~~~~~~~~~~~')
-leaf_range = [8, 16, 31, 41, 51, 61, 71, 81, 91, 100, 105, 110, 120, 140, 200]
+leaf_range = [8, 16, 24, 31, 36, 41, 51, 61, 67, 71, 75, 81, 86, 91, 100, 110, 120, 130, 140, 160, 180, 200, 220, 240]
 all_results = []
 for leaves in leaf_range:
     print('-')
     print_step('Run LGB - Leaves {}'.format(leaves))
     params2 = params.copy()
+    random_drops = np.random.choice(features, random.randint(2, 30), replace=False)
+    print_step('Randomly dropping {}'.format(', '.join(random_drops)))
+    features_c = [f for f in features if f not in random_drops]
     params2['num_leaves'] = leaves
+    params2['data_random_seed'] = leaves
     results = run_cv_model(train[features_c], test[features_c], target, runLGB, params2, rmse, 'lgb-{}'.format(leaves))
     all_results.append(results)
 import pdb
 pdb.set_trace()
 
+pprint(sorted([(leaf_range[i], all_results[i]['final_cv']) for i in range(len(leaf_range))], key = lambda x: x[1]))
 rmse(target, np.mean([r['train'] for r in all_results], axis=0))
 pd.DataFrame(np.corrcoef([r['train'] for r in all_results]), index = leaf_range, columns = leaf_range)
+
+save_in_cache('leaf_blend3',
+			  pd.DataFrame({'leaf_blend3': np.mean([r['train'] for r in all_results], axis=0)}),
+			  pd.DataFrame({'leaf_blend3': np.mean([r['test'] for r in all_results], axis=0)}))
 
 submission = pd.DataFrame()
 submission['card_id'] = test_id
 submission['target'] = np.mean([r['test'] for r in all_results], axis=0)
-submission.to_csv('submit/submit_leaf_blend.csv', index=False)
-# CV 3.643795
+submission.to_csv('submit/submit_leaf_blend2.csv', index=False)
+# CV 3.64285
+# Best single: (31, 3.6448112603947362)

@@ -7,7 +7,7 @@ import numpy as np
 import lightgbm as lgb
 
 from utils import print_step, rmse
-from drops import get_drops
+from drops import get_drops, save_drops, add_drops
 from cache import load_cache, save_in_cache
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
@@ -37,17 +37,31 @@ def get_feature_importances(data, shuffle, seed=None):
         y = data['target'].copy().sample(frac=1.0)
     
     dtrain = lgb.Dataset(data[features], y, free_raw_data=False, silent=True)
+    # lgb_params = {'application': 'regression',
+    #               'boosting': 'gbdt',
+    #               'metric': 'rmse',
+    #               'num_leaves': 105,
+    #               'max_depth': 8,
+    #               'learning_rate': 0.05,
+    #               'bagging_fraction': 0.95,
+    #               'feature_fraction': 0.8,
+    #               'lambda_l1': 101.32,
+    #               'lambda_l2': 120,
+    #               'min_data_in_leaf': 21,
+    #               'verbosity': -1,
+    #               'data_random_seed': 3,
+    #               'nthread': 4}
     lgb_params = {'application': 'regression',
                   'boosting': 'gbdt',
                   'metric': 'rmse',
-                  'num_leaves': 105,
+                  'num_leaves': 26,
                   'max_depth': 8,
                   'learning_rate': 0.05,
-                  'bagging_fraction': 0.95,
-                  'feature_fraction': 0.8,
-                  'lambda_l1': 101.32,
-                  'lambda_l2': 120,
-                  'min_data_in_leaf': 21,
+                  'bagging_fraction': 0.54,
+                  'feature_fraction': 0.73,
+                  'lambda_l1': 197,
+                  'lambda_l2': 3,
+                  'min_data_in_leaf': 16,
                   'verbosity': -1,
                   'data_random_seed': 3,
                   'nthread': 4}
@@ -55,7 +69,7 @@ def get_feature_importances(data, shuffle, seed=None):
     # Fit the model
     clf = lgb.train(params=lgb_params,
                     train_set=dtrain,
-                    num_boost_round=850)
+                    num_boost_round=300)
 
     # Get feature importances
     imp_df = pd.DataFrame()

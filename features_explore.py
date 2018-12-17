@@ -23,7 +23,7 @@ print(test[features].shape)
 print('~~~~~~~~~~~~')
 print_step('Calculating levels')
 num_levels = train[features].nunique()
-print(num_levels[num_levels < 3])
+print(num_levels[num_levels < 2])
 import pdb
 pdb.set_trace()
 
@@ -42,9 +42,14 @@ pdb.set_trace()
 print('~~~~~~~~~~~~')
 print_step('Intercorrelation analysis')
 corr = correlation.values
-for i in range(correlation.shape[0]):
-    for j in range(i+1, correlation.shape[0]):
-        if corr[i,j] > 0.96:
-            print(correlation.columns[i], ' ', correlation.columns[j], ' ', corr[i,j])
+def print_corr(threshold):
+    bads = []
+    for i in range(correlation.shape[0]):
+        for j in range(i+1, correlation.shape[0]):
+            if corr[i,j] > threshold:
+                print(correlation.columns[i], ' ', correlation.columns[j], ' ', corr[i,j])
+                bads.append(correlation.columns[j])
+    return bads
+bads = print_corr(0.99)
 import pdb
 pdb.set_trace()

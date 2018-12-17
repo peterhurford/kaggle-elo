@@ -5,7 +5,7 @@ import lightgbm as lgb
 
 from cv import run_cv_model
 from utils import print_step, rmse
-from drops import get_drops
+from drops import get_drops, save_drops, add_drops
 from cache import load_cache, save_in_cache
 
 params = {'application': 'regression',
@@ -13,7 +13,7 @@ params = {'application': 'regression',
           'metric': 'rmse',
           'num_leaves': 105,
           'max_depth': 8,
-          'learning_rate': 0.05,
+          'learning_rate': 0.01, #0.05,
           'bagging_fraction': 0.95,
           'feature_fraction': 0.8,
           'lambda_l1': 101.3,
@@ -25,6 +25,23 @@ params = {'application': 'regression',
           'early_stop': 200,
           'verbose_eval': 100,
           'num_rounds': 10000}
+# params = {'application': 'regression',
+#           'boosting': 'gbdt',
+#           'metric': 'rmse',
+#           'num_leaves': 26,
+#           'max_depth': 8,
+#           'learning_rate': 0.01, #0.05,
+#           'bagging_fraction': 0.54,
+#           'feature_fraction': 0.73,
+#           'lambda_l1': 197,
+#           'lambda_l2': 3,
+#           'min_data_in_leaf': 16,
+#           'verbosity': -1,
+#           'data_random_seed': 3,
+#           'nthread': 4,
+#           'early_stop': 200,
+#           'verbose_eval': 100,
+#           'num_rounds': 10000}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     print_step('Prep LGB')
@@ -72,7 +89,9 @@ print('~~~~~~~~~~~~')
 print_step('Run LGB')
 results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
 results['importance']['abs_value'] = abs(results['importance']['importance'])
-print(results['importance'].groupby('feature')['feature', 'importance', 'abs_value'].mean().reset_index().sort_values('abs_value', ascending=False).drop('abs_value', axis=1)) 
+imports = results['importance'].groupby('feature')['feature', 'importance', 'abs_value'].mean().reset_index()
+print(imports.sort_values('abs_value', ascending=False).drop('abs_value', axis=1))
+bads = list(imports[imports['importance'] == 0]['feature'].values)
 import pdb
 pdb.set_trace()
 

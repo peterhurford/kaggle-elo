@@ -1,13 +1,14 @@
 from math import sqrt
 from datetime import datetime
 
-from multiprocessing import Pool
-import pathos.multiprocessing as mp
-
 import pandas as pd
 import numpy as np
 
+from scipy.stats import mode
+from collections import Counter
+
 from sklearn.metrics import mean_squared_error, roc_auc_score
+
 
 
 def print_step(step):
@@ -50,3 +51,36 @@ def reduce_mem_usage(df, verbose=True):
     end_mem = df.memory_usage().sum() / 1024**2
     if verbose: print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(end_mem, 100 * (start_mem - end_mem) / start_mem))
     return df
+
+
+def first(x):
+    return x.iloc[0]
+
+def last(x):
+    return x.iloc[-1]
+
+def second_to_last(x):
+    if len(x) > 1:
+        return x.iloc[-2]
+    else:
+        return None
+
+def most_common(x):
+    return mode(x)[0][0]
+
+def num_most_common(x):
+    return mode(x)[1][0]
+
+def second_most_common(x):
+    commons = Counter(x).most_common(2)
+    if len(commons) > 1:
+        return commons[1][0]
+    else:
+        return commons[0][0]
+
+def num_second_most_common(x):
+    commons = Counter(x).most_common(2)
+    if len(commons) > 1:
+        return commons[1][1]
+    else:
+        return 0

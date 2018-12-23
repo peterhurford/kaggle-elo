@@ -1,10 +1,13 @@
 import pandas as pd
 
-from cache import load_cache
+from cache import load_cache, save_in_cache
 
 def get_drops():
-    drops, _ = load_cache('drops')
-    drops = list(drops['drops'].values)
+    if is_in_cache('drops'):
+        drops, _ = load_cache('drops')
+        drops = list(drops['drops'].values)
+    else:
+        drops = []
     print('There are {} drops'.format(len(drops)))
     return drops
 

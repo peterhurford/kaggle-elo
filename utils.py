@@ -56,12 +56,30 @@ def reduce_mem_usage(df, verbose=True):
 def first(x):
     return x.iloc[0]
 
+def second(x):
+    if len(x) > 1:
+        return x.iloc[1]
+    else:
+        return None
+
+def third(x):
+    if len(x) > 2:
+        return x.iloc[2]
+    else:
+        return None
+
 def last(x):
     return x.iloc[-1]
 
 def second_to_last(x):
     if len(x) > 1:
         return x.iloc[-2]
+    else:
+        return None
+
+def third_to_last(x):
+    if len(x) > 2:
+        return x.iloc[-3]
     else:
         return None
 

@@ -34,6 +34,9 @@ def run_cv_model(train, test, target, model_fn, params, eval_fn, label):
         val_y = pd.DataFrame({'target': val_y}).reset_index().drop('index', axis=1)
         save_in_cache('lgb_fold_data_{}'.format(i), dev_X, val_X)
         save_in_cache('lgb_fold_target_{}'.format(i), dev_y, val_y)
+        dev_index = pd.DataFrame({'index_label': dev_index}).reset_index().drop('index', axis=1)
+        val_index = pd.DataFrame({'index_label': val_index}).reset_index().drop('index', axis=1)
+        save_in_cache('lgb_fold_index_{}'.format(i), dev_index, val_index)
         i += 1
 
     def run_fold_parallel(index):
@@ -57,21 +60,32 @@ def run_cv_model(train, test, target, model_fn, params, eval_fn, label):
     pool.close()
     pool.join()
     pool.restart()
-    import pdb
-    pdb.set_trace()
+    print_step('NB: Parallel model ran and pool is closed.')
 
-    if importances is not None and isinstance(train, pd.DataFrame):
-        fold_importance_df = pd.DataFrame()
-        fold_importance_df['feature'] = train.columns
-        fold_importance_df['importance'] = importances
-        fold_importance_df['fold'] = i
-        feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
-    pred_full_test = pred_full_test + pred_test_y
-    pred_train[val_index] = pred_val_y
-    cv_score = eval_fn(val_y, pred_val_y)
-    cv_scores.append(eval_fn(val_y, pred_val_y))
-    print_step(label + ' cv score ' + str(i) + ' : ' + str(cv_score))
-    i += 1
+    for i in range(1, 6):
+        print_step('Gathering ' + label + ' fold ' + str(i) + '/5')
+        importances, _ = load_cache('lgb_fold_importances_{}'.format(i))
+
+        if importances is not None and isinstance(train, pd.DataFrame):
+            fold_importance_df = pd.DataFrame()
+            fold_importance_df['feature'] = train.columns
+            fold_importance_df['importance'] = importances['importance']
+            fold_importance_df['fold'] = i
+            feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
+
+        pred_val_y, pred_test_y = load_cache('lgb_fold_preds_{}'.format(i))
+        dev_y, val_y = load_cache('lgb_fold_target_{}'.format(i))
+        dev_index, val_index = load_cache('lgb_fold_index_{}'.format(i))
+        val_y = val_y['target']
+        val_index = val_index['index_label']
+        pred_val_y = pred_val_y['pred']
+        pred_test_y = pred_test_y['pred']
+        pred_full_test = pred_full_test + pred_test_y
+        pred_train[val_index] = pred_val_y
+        cv_score = eval_fn(val_y, pred_val_y)
+        cv_scores.append(eval_fn(val_y, pred_val_y))
+        print_step(label + ' cv score ' + str(i) + ' : ' + str(cv_score))
+
     print_step(label + ' cv scores : ' + str(cv_scores))
     print_step(label + ' mean cv score : ' + str(np.mean(cv_scores)))
     print_step(label + ' std cv score : ' + str(np.std(cv_scores)))
@@ -80,7 +94,7 @@ def run_cv_model(train, test, target, model_fn, params, eval_fn, label):
     pred_full_test = pred_full_test / 5.0
     results = {'label': label,
                'train': pred_train, 'test': pred_full_test,
-                'cv': cv_scores,
-                'final_cv': final_cv,
-                'importance': feature_importance_df}
+               'cv': cv_scores,
+               'final_cv': final_cv,
+               'importance': feature_importance_df}
     return results

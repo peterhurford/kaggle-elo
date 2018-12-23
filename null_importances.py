@@ -87,7 +87,7 @@ np.random.seed(123)
 actual_imp_df = get_feature_importances(data=train, shuffle=False)
 
 null_imp_df = pd.DataFrame()
-nb_runs = 50
+nb_runs = 30
 import time
 start = time.time()
 dsp = ''
@@ -104,7 +104,6 @@ for i in range(nb_runs):
     print_step(dsp)
 
 feature_scores = []
-max_features = 300
 for _f in actual_imp_df['feature'].unique():
     f_null_imps_gain = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_gain'].values
     f_act_imps_gain = actual_imp_df.loc[actual_imp_df['feature'] == _f, 'importance_gain'].mean()

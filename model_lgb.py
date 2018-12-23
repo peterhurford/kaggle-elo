@@ -63,9 +63,8 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-features_c = features
-#drops = get_drops()
-#features_c = [f for f in features if f not in drops]
+drops = get_drops()
+features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)
 

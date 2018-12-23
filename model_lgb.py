@@ -13,7 +13,7 @@ params = {'application': 'regression',
           'metric': 'rmse',
           'num_leaves': 105,
           'max_depth': 8,
-          'learning_rate': 0.01, #0.05,
+          'learning_rate': 0.05,
           'bagging_fraction': 0.95,
           'feature_fraction': 0.8,
           'lambda_l1': 101.3,
@@ -21,27 +21,10 @@ params = {'application': 'regression',
           'min_data_in_leaf': 21,
           'verbosity': -1,
           'data_random_seed': 3,
-          'nthread': 4,
+          'nthread': 7,
           'early_stop': 200,
           'verbose_eval': 100,
           'num_rounds': 10000}
-# params = {'application': 'regression',
-#           'boosting': 'gbdt',
-#           'metric': 'rmse',
-#           'num_leaves': 26,
-#           'max_depth': 8,
-#           'learning_rate': 0.01, #0.05,
-#           'bagging_fraction': 0.54,
-#           'feature_fraction': 0.73,
-#           'lambda_l1': 197,
-#           'lambda_l2': 3,
-#           'min_data_in_leaf': 16,
-#           'verbosity': -1,
-#           'data_random_seed': 3,
-#           'nthread': 4,
-#           'early_stop': 200,
-#           'verbose_eval': 100,
-#           'num_rounds': 10000}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     print_step('Prep LGB')
@@ -80,8 +63,9 @@ features = [c for c in train.columns if c not in ['card_id', 'first_active_month
 print(train[features].shape)
 print(test[features].shape)
 
-drops = get_drops()
-features_c = [f for f in features if f not in drops]
+features_c = features
+#drops = get_drops()
+#features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
 print(test[features_c].shape)
 

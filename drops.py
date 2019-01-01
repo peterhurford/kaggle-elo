@@ -4,7 +4,7 @@ from cache import load_cache, save_in_cache, is_in_cache
 
 def get_drops(verbose=True):
     if is_in_cache('drops'):
-        drops, _ = load_cache('drops')
+        drops, _ = load_cache('drops', verbose=False)
         drops = list(drops['drops'].values)
     else:
         drops = []

@@ -17,11 +17,11 @@ params = {'application': 'regression',
           'metric': 'rmse',
           'num_leaves': 105,
           'max_depth': 8,
-          'learning_rate': 0.05,
-          'bagging_fraction': 0.95,
+          'learning_rate': 0.01,
+          'bagging_fraction': 0.9,
           'feature_fraction': 0.8,
-          'lambda_l1': 101.3,
-          'lambda_l2': 120,
+          'lambda_l1': 100,
+          'lambda_l2': 100,
           'min_data_in_leaf': 21,
           'verbosity': -1,
           'data_random_seed': 3,
@@ -73,7 +73,7 @@ print(train[features].shape)
 print(test[features].shape)
 
 print('~~~~~~~~~~~~')
-leaf_range = [8, 16, 24, 31, 36, 41, 51, 61, 67, 71, 75, 81, 86, 91, 100, 110, 120, 130, 140, 160, 180, 200, 220, 240]
+leaf_range = [8, 16, 24, 31, 36, 41, 51, 61, 71, 81, 91, 100, 110, 120, 140, 160, 180, 200, 220, 240, 300, 400]
 all_results = []
 for leaves in leaf_range:
     print('-')

@@ -11,17 +11,17 @@ from cache import load_cache, save_in_cache
 params = {'application': 'regression',
           'boosting': 'gbdt',
           'metric': 'rmse',
-          'num_leaves': 105,
+          'num_leaves': 16,
           'max_depth': 8,
-          'learning_rate': 0.05,
-          'bagging_fraction': 0.95,
+          'learning_rate': 0.01,
+          'bagging_fraction': 0.9,
           'feature_fraction': 0.8,
-          'lambda_l1': 101.3,
-          'lambda_l2': 120,
-          'min_data_in_leaf': 21,
+          'lambda_l1': 100,
+          'lambda_l2': 100,
+          'min_data_in_leaf': 40,
           'verbosity': -1,
           'data_random_seed': 3,
-          'nthread': 7,
+          'nthread': 6,
           'early_stop': 200,
           'verbose_eval': 100,
           'num_rounds': 10000}
@@ -59,10 +59,34 @@ target = train['target']
 train_id = train['card_id']
 test_id = test['card_id']
 
+cat_cols = ['city_id', 'category_1', 'category_2', 'installments', 'category_3', 'merchant_category_id', 'subsector_id', 'purchase_amount_bin', 'purchase_hour', 'purchase_dayofweek']
+total = len(cat_cols) + 2
+print_step('Merging on vects 1/{}'.format(total))
+tr_ridge, te_ridge = load_cache('ridge_encode_feature', verbose=False)
+train = pd.concat((train, tr_ridge), axis=1)
+test = pd.concat((test, te_ridge), axis=1)
+print_step('Merging on vects 2/{}'.format(total))
+tr_vec_svd, te_vec_svd = load_cache('char_vects_svd', verbose=False)
+train = pd.concat((train, tr_vec_svd), axis=1)
+test = pd.concat((test, te_vec_svd), axis=1)
+tr_ridge, te_ridge = load_cache('ridge_encode_cv', verbose=False)
+train = pd.concat((train, tr_ridge), axis=1)
+test = pd.concat((test, te_ridge), axis=1)
+i = 3
+for col in cat_cols:
+	print_step('Merging on vects {}/{} {}'.format(i, total, col))
+	tr_vec_svd, te_vec_svd = load_cache('{}_svd'.format(col), verbose=False)
+	train = pd.concat((train, tr_vec_svd), axis=1)
+	test = pd.concat((test, te_vec_svd), axis=1)
+	tr_ridge, te_ridge = load_cache('ridge_encode_cv_{}'.format(col), verbose=False)
+	train = pd.concat((train, tr_ridge), axis=1)
+	test = pd.concat((test, te_ridge), axis=1)
+	i += 1
+
 features = [c for c in train.columns if c not in ['card_id', 'first_active_month', 'target']]
 print(train[features].shape)
 print(test[features].shape)
-
+print_step('Dropping')
 drops = get_drops()
 features_c = [f for f in features if f not in drops]
 print(train[features_c].shape)
@@ -70,7 +94,7 @@ print(test[features_c].shape)
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb')
+results = run_cv_model(train[features_c], test[features_c], target, runLGB, params, rmse, 'lgb', cores=5)
 results['importance']['abs_value'] = abs(results['importance']['importance'])
 imports = results['importance'].groupby('feature')['feature', 'importance', 'abs_value'].mean().reset_index()
 print(imports.sort_values('abs_value', ascending=False).drop('abs_value', axis=1))

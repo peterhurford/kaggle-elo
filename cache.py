@@ -50,7 +50,7 @@ def is_csr_matrix(matrix):
     return isinstance(matrix, csr_matrix)
 
 
-def load_cache(key):
+def load_cache(key, verbose=True):
     if is_in_cache(key):
         if is_in_cache(key) == 'dict':
             train_path = 'cache/model_' + key + '.npy'
@@ -62,11 +62,13 @@ def load_cache(key):
             try:
                 test_path = 'cache/test_' + key + '.npcsr.npz'
                 test = load_sparse_csr(test_path)
-                print('Train shape: {}'.format(train.shape))
-                print('Test shape: {}'.format(test.shape))
+                if verbose:
+                    print('Train shape: {}'.format(train.shape))
+                    print('Test shape: {}'.format(test.shape))
             except IOError:
                 test = None
-                print('Train shape: {}'.format(train.shape))
+                if verbose:
+                    print('Train shape: {}'.format(train.shape))
         else:
             train_path = 'cache/train_' + key + '.feather'
             test_path = 'cache/test_' + key + '.feather'
@@ -75,20 +77,22 @@ def load_cache(key):
                 test = feather.read_dataframe(test_path)
             except IOError:
                 test = None
-            if test is not None:
-                print('Test shape: {}'.format(test.shape))
-            print('Train shape: {}'.format(train.shape))
+            if verbose:
+                if test is not None:
+                    print('Test shape: {}'.format(test.shape))
+                print('Train shape: {}'.format(train.shape))
 
-        if test is None:
-            print_step('Skipped... Loaded ' + train_path + ' from cache!')
-        else:
-            print_step('Skipped... Loaded ' + train_path + ' and ' + test_path + ' from cache!')
+        if verbose:
+            if test is None:
+                print_step('Skipped... Loaded ' + train_path + ' from cache!')
+            else:
+                print_step('Skipped... Loaded ' + train_path + ' and ' + test_path + ' from cache!')
         return train, test
     else:
         raise ValueError
 
 
-def save_in_cache(key, train, test):
+def save_in_cache(key, train, test, verbose=True):
     if isinstance(train, dict):
         train = np.array(train)
         train_path = 'cache/model_' + key
@@ -105,7 +109,8 @@ def save_in_cache(key, train, test):
         if test is not None:
             test_path = 'cache/test_' + key + '.feather'
             test.to_feather(test_path)
-    if test is None:
-        print_step('Saved ' + train_path + ' to cache!')
-    else:
-        print_step('Saved ' + train_path + ' and ' + test_path + ' to cache!')
+    if verbose:
+        if test is None:
+            print_step('Saved ' + train_path + ' to cache!')
+        else:
+            print_step('Saved ' + train_path + ' and ' + test_path + ' to cache!')
